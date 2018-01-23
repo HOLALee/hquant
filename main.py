@@ -4,6 +4,7 @@
 import os,sys
 import pandas as pd
 import tushare as ts
+import json
 from common import base
 
 root = sys.path[0]
