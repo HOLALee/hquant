@@ -69,7 +69,7 @@ class AnlStBase(object):
         2.净资产收益率大于行业均值
         3.毛利率大于行业均值
         """
-        filter_df = df.loc[(df.pe>0)&(df.pe<mean['pe'])&(df.pb<mean['pb'])&(df.roe>mean['roe'])&(df.gross_profit_rate>mean['gross_profit_rate'])]
+        filter_df = df.loc[(df.pe>0)&(df.pe<mean['pe'])&(df.roe>mean['roe'])&(df.gross_profit_rate>mean['gross_profit_rate'])]
         filter_df.append(mean,ignore_index=True)
 
         #保存到excel
