@@ -69,5 +69,5 @@ class Main:
 
 if __name__ == '__main__':
     m = Main()
-    print sys.getdefaultencoding()
-    m.getStockBase()
+    #print sys.getdefaultencoding()
+    #m.getStockBase()
