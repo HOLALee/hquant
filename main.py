@@ -1,11 +1,15 @@
 #!\usr\bin\python
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 
 import os,sys
 import pandas as pd
 import tushare as ts
 import json
 from common import base
+import sys
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 root = sys.path[0]
 (year,q) = base.getYearAndQua()
@@ -36,33 +40,34 @@ class Main:
         q = 3
         print "数据说明：",year,"年",q,"季度"
         df1 = ts.get_stock_basics()
-        df1.to_json(root + "\data\get_stock_basics.json")
+        df1.to_excel(root + "\data\get_stock_basics.xlsx")
         print "get_stock_basics success..."
 
         df2 = ts.get_report_data(year,q)
-        df2.to_json(root + "\data\get_report_data.json")
+        df2.to_excel(root + "\data\get_report_data.xlsx",encoding="utf-8")
         print "get_report_data success..."
 
         df3 = ts.get_profit_data(year,q)
-        df3.to_json(root + "\data\get_profit_data.json")
+        df3.to_excel(root + "\data\get_profit_data.xlsx",encoding="utf-8")
         print "get_profit_data success..."
 
         df4 = ts.get_operation_data(year,q)
-        df4.to_json(root + "\data\get_operation_data.json")
+        df4.to_excel(root + "\data\get_operation_data.xlsx",encoding="utf-8")
         print "get_operation_data success..."
 
         df5 = ts.get_growth_data(year,q)
-        df5.to_json(root + "\data\get_growth_data.json")
+        df5.to_excel(root + "\data\get_growth_data.xlsx",encoding="utf-8")
         print "get_growth_data success..."
 
         df6 = ts.get_debtpaying_data(year,q)
-        df6.to_json(root + "\data\get_debtpaying_data.json")
+        df6.to_excel(root + "\data\get_debtpaying_data.xlsx",encoding="utf-8")
         print "get_debtpaying_data success..."
 
         df7 = ts.get_cashflow_data(year,q)
-        df7.to_json(root + "\data\get_cashflow_data.json")
+        df7.to_excel(root + "\data\get_cashflow_data.xlsx",encoding="utf-8")
         print "get_cashflow_data success..."
 
 if __name__ == '__main__':
     m = Main()
+    print sys.getdefaultencoding()
     m.getStockBase()

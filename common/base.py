@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import datetime
+import codecs
 
 """
 基础模块
