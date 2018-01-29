@@ -52,10 +52,7 @@ class AnlStBase(object):
         8.求各列均值
         """
         #df = df.dropna(axis=0)
-<<<<<<< HEAD
-=======
         #增加净利润资产率=净利润/总资产
->>>>>>> 8dcbd132b47b2ad0d82f3d6c28fe08c4daf791a6
         df.fillna(0)
         #增加净利润资产率=净利润/总资产
         df['profit_assets'] = df['net_profits']/df['totalAssets']
@@ -87,17 +84,7 @@ class AnlStBase(object):
         2.净资产收益率大于行业均值
         3.毛利率大于行业均值
         """
-<<<<<<< HEAD
-        filter_df = df.loc[
-            (df.roe_pb>mean['roe_pb'])
-            &(df.roe>mean['roe'])
-            &(df.nav>mean['nav'])
-            &(df.gross_profit_rate>mean['gross_profit_rate'])
-            &(df.currentasset_turnover>mean['currentasset_turnover'])
-        ]
-=======
         filter_df = df.loc[(df.pb<mean['pb'])&(df.roe_pb>mean['roe_pb'])&(df.roe>mean['roe'])&(df.pe<mean['pe'])]
->>>>>>> 8dcbd132b47b2ad0d82f3d6c28fe08c4daf791a6
         filter_df.append(mean,ignore_index=True)
 
         #保存到excel
@@ -106,11 +93,7 @@ class AnlStBase(object):
         #return df,filter_df
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     a = AnlStBase("D:\GitHub\hquant","元器件",u'元器件')
-=======
-    a = AnlStBase("D:\GitHub\hquant","软件服务","软件服务")
->>>>>>> 8dcbd132b47b2ad0d82f3d6c28fe08c4daf791a6
     a.axisData(
         False,
         "get_stock_basics.xlsx",
