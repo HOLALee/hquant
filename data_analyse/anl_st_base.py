@@ -52,18 +52,22 @@ class AnlStBase(object):
         8.求各列均值
         """
         #df = df.dropna(axis=0)
-        if self.industry:
-            df = df.loc[df.industry.str.contains(self.industry)]
-        #增加净利润资产率=净利润/总资产
         df.fillna(0)
+        #增加净利润资产率=净利润/总资产
         df['profit_assets'] = df['net_profits']/df['totalAssets']
         df['roe_pb'] = df['roe']/df['pb']
         df = df[~df.name.str.contains("S")]
         df = df.drop_duplicates('code')
         df = df.sort_values(by=['roe_pb','gross_profit_rate','currentasset_turnover','rateofreturn','nav','profit_assets'])
         df = df.loc[:,['code','name','industry','roe_pb','roe','pb','pe','nav','gross_profit_rate','profit_assets','currentasset_turnover','rateofreturn']]
+
+        #industry_mean = df.groupby('industry').mean()
+        #industry_mean.to_excel(a.root + "/data/industry.mean.xlsx")
+
+        if self.industry:
+            df = df.loc[df.industry.str.contains(self.industry)]
+
         mean = df.mean()
-        print mean
 
         """
         因子筛选策略：
@@ -71,7 +75,13 @@ class AnlStBase(object):
         2.净资产收益率大于行业均值
         3.毛利率大于行业均值
         """
-        filter_df = df.loc[(df.pb<mean['pb'])&(df.roe_pb>mean['roe_pb'])&(df.roe<mean['roe'])&(df.pe<mean['pe'])]
+        filter_df = df.loc[
+            (df.roe_pb>mean['roe_pb'])
+            &(df.roe>mean['roe'])
+            &(df.nav>mean['nav'])
+            &(df.gross_profit_rate>mean['gross_profit_rate'])
+            &(df.currentasset_turnover>mean['currentasset_turnover'])
+        ]
         filter_df.append(mean,ignore_index=True)
 
         #保存到excel
@@ -80,7 +90,7 @@ class AnlStBase(object):
         #return df,filter_df
 
 if __name__ == "__main__":
-    a = AnlStBase("D:\GitHub\hquant","证券","zhengquan")
+    a = AnlStBase("D:\GitHub\hquant","元器件",u'元器件')
     a.axisData(
         "get_stock_basics.xlsx",
         "get_profit_data.xlsx",
