@@ -30,7 +30,7 @@ class AnlStBase(object):
         df = pd.read_excel(path,encoding="utf-8")
         return df
 
-    def axisData(self, *args):
+    def axisData(self, mean, *args):
         dfs = []
         for i in args:
             dfs.append(self.importJSON(i))
@@ -52,12 +52,24 @@ class AnlStBase(object):
         8.求各列均值
         """
         #df = df.dropna(axis=0)
+<<<<<<< HEAD
+=======
+        #增加净利润资产率=净利润/总资产
+>>>>>>> 8dcbd132b47b2ad0d82f3d6c28fe08c4daf791a6
         df.fillna(0)
         #增加净利润资产率=净利润/总资产
         df['profit_assets'] = df['net_profits']/df['totalAssets']
         df['roe_pb'] = df['roe']/df['pb']
         df = df[~df.name.str.contains("S")]
         df = df.drop_duplicates('code')
+
+        if mean:
+            industry_mean = df.groupby(df['industry']).mean()
+            industry_mean.to_excel(a.root + "/data/industry.Mean.xlsx")
+
+        if self.industry:
+            df = df.loc[df.industry.str.contains(self.industry)]
+
         df = df.sort_values(by=['roe_pb','gross_profit_rate','currentasset_turnover','rateofreturn','nav','profit_assets'])
         df = df.loc[:,['code','name','industry','roe_pb','roe','pb','pe','nav','gross_profit_rate','profit_assets','currentasset_turnover','rateofreturn']]
 
@@ -75,6 +87,7 @@ class AnlStBase(object):
         2.净资产收益率大于行业均值
         3.毛利率大于行业均值
         """
+<<<<<<< HEAD
         filter_df = df.loc[
             (df.roe_pb>mean['roe_pb'])
             &(df.roe>mean['roe'])
@@ -82,16 +95,24 @@ class AnlStBase(object):
             &(df.gross_profit_rate>mean['gross_profit_rate'])
             &(df.currentasset_turnover>mean['currentasset_turnover'])
         ]
+=======
+        filter_df = df.loc[(df.pb<mean['pb'])&(df.roe_pb>mean['roe_pb'])&(df.roe>mean['roe'])&(df.pe<mean['pe'])]
+>>>>>>> 8dcbd132b47b2ad0d82f3d6c28fe08c4daf791a6
         filter_df.append(mean,ignore_index=True)
 
         #保存到excel
-        df.to_excel(a.root + "/data/" + self.industryCode + ".xlsx")
-        filter_df.to_excel(a.root + "/data/" + self.industryCode + ".Top.xlsx")
+        df.to_excel(a.root + "/data/" + self.industry + ".xlsx")
+        filter_df.to_excel(a.root + "/data/" + self.industry + ".Top.xlsx")
         #return df,filter_df
 
 if __name__ == "__main__":
+<<<<<<< HEAD
     a = AnlStBase("D:\GitHub\hquant","元器件",u'元器件')
+=======
+    a = AnlStBase("D:\GitHub\hquant","软件服务","软件服务")
+>>>>>>> 8dcbd132b47b2ad0d82f3d6c28fe08c4daf791a6
     a.axisData(
+        False,
         "get_stock_basics.xlsx",
         "get_profit_data.xlsx",
         "get_operation_data.xlsx",
