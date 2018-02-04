@@ -67,7 +67,15 @@ class Main:
         df7.to_excel(root + "\data\get_cashflow_data.xlsx",encoding="utf-8")
         print "get_cashflow_data success..."
 
+        df8 = ts.get_concept_classified()
+        df8.to_excel(root + "\data\get_concept_classified.xlsx",encoding="utf-8")
+        print "get_concept_classified success..."
+
 if __name__ == '__main__':
     m = Main()
     #print sys.getdefaultencoding()
     m.getStockBase()
+    # df = ts.inst_tops(60)
+    # df = df.loc[df.samount==0]
+    # df.sort_values(by=['bcount'])
+    # df.to_excel(root + "\data\inst_tops.xlsx",encoding="utf-8")

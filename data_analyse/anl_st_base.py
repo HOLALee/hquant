@@ -16,14 +16,14 @@ sys.setdefaultencoding('utf-8')
 
 class AnlStBase(object):
     """docstring for AnlStBase."""
-    def __init__(self, root, industry, industryCode):
+    def __init__(self, root, industry = None, industryCode = None):
         super(AnlStBase, self).__init__()
         self.root = root
         if industryCode is None:
             self.industryCode = "all"
         else:
             self.industryCode = industryCode
-        self.industry = unicode(industry, "utf-8")
+        self.industry = industry
 
     def importJSON(self, filename):
         path = self.root+"\data\\" + filename
@@ -38,6 +38,7 @@ class AnlStBase(object):
         df = pd.merge(df, dfs[2])
         df = pd.merge(df, dfs[3])
         df = pd.merge(df, dfs[4])
+        df = pd.merge(df, dfs[5])
 
         """
         数据整理
@@ -55,8 +56,8 @@ class AnlStBase(object):
         #增加净利润资产率=净利润/总资产
         df.fillna(0)
         #增加净利润资产率=净利润/总资产
-        df['profit_assets'] = df['net_profits']/df['totalAssets']
-        df['roe_pb'] = df['roe']/df['pb']
+        #df['roe_pb'] = df['roe']/df['pb']
+        df['sv'] = df['pe']/df['npr']
         df = df[~df.name.str.contains("S")]
         df = df.drop_duplicates('code')
 
@@ -65,16 +66,13 @@ class AnlStBase(object):
             industry_mean.to_excel(a.root + "/data/industry.Mean.xlsx")
 
         if self.industry:
-            df = df.loc[df.industry.str.contains(self.industry)]
+            df = df.loc[df.industry.isin(self.industry)]
 
-        df = df.sort_values(by=['roe_pb','gross_profit_rate','currentasset_turnover','rateofreturn','nav','profit_assets'])
-        df = df.loc[:,['code','name','industry','roe_pb','roe','pb','pe','nav','gross_profit_rate','profit_assets','currentasset_turnover','rateofreturn']]
+        df = df.sort_values(by=['sv','gross_profit_rate','currentasset_turnover','rateofreturn','nav'])
+        df = df.loc[:,['code','name','industry', 'c_name', 'sv', 'npr', 'roe_pb','roe','pb','pe','nav','gross_profit_rate','currentasset_turnover','rateofreturn']]
 
-        #industry_mean = df.groupby('industry').mean()
-        #industry_mean.to_excel(a.root + "/data/industry.mean.xlsx")
-
-        if self.industry:
-            df = df.loc[df.industry.str.contains(self.industry)]
+        # if self.industry:
+        #     df = df.loc[df.industry.isin(self.industry)]
 
         mean = df.mean()
 
@@ -84,19 +82,21 @@ class AnlStBase(object):
         2.净资产收益率大于行业均值
         3.毛利率大于行业均值
         """
-        filter_df = df.loc[(df.pb<mean['pb'])&(df.roe_pb>mean['roe_pb'])&(df.roe>mean['roe'])&(df.pe<mean['pe'])]
+        filter_df = df.loc[(df.npr>mean['npr'])&(df.pe<15)&(df.sv<0.2)]
         filter_df.append(mean,ignore_index=True)
 
         #保存到excel
-        df.to_excel(a.root + "/data/" + self.industry + ".xlsx")
-        filter_df.to_excel(a.root + "/data/" + self.industry + ".Top.xlsx")
+        df.to_excel(a.root + "/data/" + self.industryCode + ".xlsx")
+        filter_df.to_excel(a.root + "/data/" + self.industryCode + ".Top.xlsx")
         #return df,filter_df
 
 if __name__ == "__main__":
-    a = AnlStBase("D:\GitHub\hquant","元器件",u'元器件')
+    a = AnlStBase("D:\GitHub\hquant",[u"中成药",u"乳制品",u"化学制药",u"医药商业",u"啤酒",
+            u"商贸代理",u"生物制药",u"百货",u"红黄药酒",u"超市连锁",u"软饮料",u"酒店餐饮",u"食品"],u'防守行业')
     a.axisData(
-        False,
+        True,
         "get_stock_basics.xlsx",
+        "get_concept_classified.xlsx",
         "get_profit_data.xlsx",
         "get_operation_data.xlsx",
         "get_growth_data.xlsx",
