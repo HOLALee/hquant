@@ -1,5 +1,9 @@
 ﻿# -*- coding: utf-8 -*-
 
+"""
+防守行业价值挖掘策略
+"""
+
 from gmsdk.api import StrategyBase
 
 

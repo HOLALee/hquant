@@ -74,8 +74,10 @@ class Main:
 if __name__ == '__main__':
     m = Main()
     #print sys.getdefaultencoding()
-    m.getStockBase()
+    #m.getStockBase()
     # df = ts.inst_tops(60)
     # df = df.loc[df.samount==0]
     # df.sort_values(by=['bcount'])
     # df.to_excel(root + "\data\inst_tops.xlsx",encoding="utf-8")
+    df = ts.get_report_data(2014)
+    print df
