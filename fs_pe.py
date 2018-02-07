@@ -1,5 +1,9 @@
 ﻿# -*- coding: utf-8 -*-
 
+"""
+防守行业价值挖掘策略
+"""
+
 from gmsdk.api import StrategyBase
 
 class Mystrategy(StrategyBase):
@@ -46,10 +50,14 @@ class Mystrategy(StrategyBase):
 
 if __name__ == '__main__':
     myStrategy = Mystrategy(
+        #掘金量化平台账号与密码
         username='-',
         password='-',
+        #策略token
         strategy_id='4786a29b-09b7-11e8-bce8-76dfbf6cddb5',
+        #目标标的
         subscribe_symbols='SZSE.000513.tick,SZSE.000513.bar.15',
+        #行情模式，1：不订阅行情，2：订阅实时行情，3：订阅模拟行情，4：订阅回访行情
         mode=4,
         td_addr='127.0.0.1:8001'
     )

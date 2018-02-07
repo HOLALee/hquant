@@ -1,9 +1,10 @@
-#-*- coding=utf-8 -*-
+
 """
 选股策略
 根据质量因子对股票进行筛选
 质量因子：净资产增长率、净资产收益率、毛利率、流动资产周转率、资产的经营现金流量回报率、净利润资产率
 """
+
 import pandas as pd
 import numpy as np
 import xlrd
@@ -69,7 +70,7 @@ class AnlStBase(object):
             df = df.loc[df.industry.isin(self.industry)]
 
         df = df.sort_values(by=['sv','gross_profit_rate','currentasset_turnover','rateofreturn','nav'])
-        df = df.loc[:,['code','name','industry', 'c_name', 'sv', 'npr', 'roe_pb','roe','pb','pe','nav','gross_profit_rate','currentasset_turnover','rateofreturn']]
+        df = df.loc[:,['code','name','industry', 'c_name', 'sv', 'npr', 'roe_pb', 'esp', 'roe','pb','pe','nav','gross_profit_rate','currentasset_turnover','rateofreturn']]
 
         # if self.industry:
         #     df = df.loc[df.industry.isin(self.industry)]
@@ -82,23 +83,21 @@ class AnlStBase(object):
         2.净资产收益率大于行业均值
         3.毛利率大于行业均值
         """
-        filter_df = df.loc[(df.npr>mean['npr'])&(df.pe<15)&(df.sv<0.2)]
-        filter_df.append(mean,ignore_index=True)
+        filter_df = df.loc[(df.pe>mean['pe'])&(df.pb<2)]
 
         #保存到excel
         df.to_excel(a.root + "/data/" + self.industryCode + ".xlsx")
         filter_df.to_excel(a.root + "/data/" + self.industryCode + ".Top.xlsx")
         #return df,filter_df
-
-if __name__ == "__main__":
-    a = AnlStBase("D:\GitHub\hquant",[u"中成药",u"乳制品",u"化学制药",u"医药商业",u"啤酒",
-            u"商贸代理",u"生物制药",u"百货",u"红黄药酒",u"超市连锁",u"软饮料",u"酒店餐饮",u"食品"],u'防守行业')
-    a.axisData(
-        True,
-        "get_stock_basics.xlsx",
-        "get_concept_classified.xlsx",
-        "get_profit_data.xlsx",
-        "get_operation_data.xlsx",
-        "get_growth_data.xlsx",
-        "get_cashflow_data.xlsx"
-    )
+#
+# if __name__ == "__main__":
+#     a = AnlStBase("D:\GitHub\hquant")
+#     a.axisData(
+#         True,
+#         "get_stock_basics.xlsx",
+#         "get_concept_classified.xlsx",
+#         "get_profit_data.xlsx",
+#         "get_operation_data.xlsx",
+#         "get_growth_data.xlsx",
+#         "get_cashflow_data.xlsx"
+#     )
