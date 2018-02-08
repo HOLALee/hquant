@@ -79,5 +79,5 @@ if __name__ == '__main__':
     # df = df.loc[df.samount==0]
     # df.sort_values(by=['bcount'])
     # df.to_excel(root + "\data\inst_tops.xlsx",encoding="utf-8")
-    df = ts.get_report_data(2014)
+    df = ts.get_report_data(2017,2)
     print df
