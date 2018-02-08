@@ -79,5 +79,5 @@ if __name__ == '__main__':
     # df = df.loc[df.samount==0]
     # df.sort_values(by=['bcount'])
     # df.to_excel(root + "\data\inst_tops.xlsx",encoding="utf-8")
-    df = ts.get_stock_basics()
-    print df
+    data = ts.get_h_data(['002337','600848'])
+    print data
