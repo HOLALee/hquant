@@ -36,8 +36,8 @@ class Main:
         #成长能力指标
         navs = []            #净资产增长率
         targs = []           #总资产增长率
-        year = 2017
-        q = 3
+        year = 2016
+        q = 1
         print "数据说明：",year,"年",q,"季度"
         df1 = ts.get_stock_basics()
         df1.to_excel(root + "\data\get_stock_basics.xlsx")
@@ -79,5 +79,5 @@ if __name__ == '__main__':
     # df = df.loc[df.samount==0]
     # df.sort_values(by=['bcount'])
     # df.to_excel(root + "\data\inst_tops.xlsx",encoding="utf-8")
-    df = ts.get_report_data(2017,2)
+    df = ts.get_stock_basics()
     print df

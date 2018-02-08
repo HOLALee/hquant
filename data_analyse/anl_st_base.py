@@ -1,4 +1,4 @@
-
+# -*- coding: UTF-8 -*-
 """
 选股策略
 根据质量因子对股票进行筛选
@@ -71,7 +71,9 @@ class AnlStBase(object):
 
         df = df.sort_values(by=['sv','gross_profit_rate','currentasset_turnover','rateofreturn','nav'])
         df = df.loc[:,['code','name','industry', 'c_name', 'sv', 'npr', 'roe_pb', 'esp', 'roe','pb','pe','nav','gross_profit_rate','currentasset_turnover','rateofreturn']]
-
+        df['code']=df['code'].astype(str).str.zfill(6)
+        df['market'] =  df['code'].map(self.getMarket)
+        df['label'] = df['code'] + '.' + df['market']
         # if self.industry:
         #     df = df.loc[df.industry.isin(self.industry)]
 
@@ -83,21 +85,27 @@ class AnlStBase(object):
         2.净资产收益率大于行业均值
         3.毛利率大于行业均值
         """
-        filter_df = df.loc[(df.pe>mean['pe'])&(df.pb<2)]
+        filter_df = df.loc[(df.pe > mean['pe'])&(df.pb<2)]
 
         #保存到excel
         df.to_excel(a.root + "/data/" + self.industryCode + ".xlsx")
         filter_df.to_excel(a.root + "/data/" + self.industryCode + ".Top.xlsx")
         #return df,filter_df
-#
-# if __name__ == "__main__":
-#     a = AnlStBase("D:\GitHub\hquant")
-#     a.axisData(
-#         True,
-#         "get_stock_basics.xlsx",
-#         "get_concept_classified.xlsx",
-#         "get_profit_data.xlsx",
-#         "get_operation_data.xlsx",
-#         "get_growth_data.xlsx",
-#         "get_cashflow_data.xlsx"
-#     )
+
+    def getMarket(self,x):
+        if x.startswith('00') or x.startswith('30'):
+            return 'XSHE'
+        elif x.startswith('60'):
+            return 'XSHG'
+
+if __name__ == "__main__":
+    a = AnlStBase("D:\GitHub\hquant")
+    a.axisData(
+        True,
+        "get_stock_basics.xlsx",
+        "get_concept_classified.xlsx",
+        "get_profit_data.xlsx",
+        "get_operation_data.xlsx",
+        "get_growth_data.xlsx",
+        "get_cashflow_data.xlsx"
+    )
