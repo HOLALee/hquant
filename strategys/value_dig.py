@@ -1,6 +1,6 @@
-<<<<<<< current
 # -*- coding: UTF-8 -*-
 import datetime
+from WindPy import w
 from rqalpha.api import *
 from rqalpha import run_func
 import tushare as ts
@@ -8,9 +8,6 @@ import pandas as pd
 import numpy as np
 import xlrd
 import openpyxl
-
-SZ_SUFFIX = 'XSHE'  #00或者30开头的深市股票
-SH_SUFFIX = 'XSHG'  #600开头的沪市股票
 
 """
 init初始化逻辑
@@ -43,16 +40,14 @@ def start(context,bar_dict):
     for code in context.codes:
         if len(context.portfolio.positions) >= 10:
             break
-        ex = ts.get_hist_data(code).head(1)
+
+        #ex = ts.get_hist_data(code).head(1)
         #如果收盘价低于20日均价则买入
         #if ex['ma20'][0] > ex['close'][0]:
-        order_book_id = None
-        if code.startswith('00') or code.startswith('30'):
-            order_book_id = code + '.XSHE'
-        elif code.startswith('60'):
-            order_book_id = code + '.XSHG'
-
-        if not is_suspended(order_book_id):
+        order_book_id = get_order_book_id(code,'rqalpha')
+        if order_book_id in list(context.portfolio.positions.keys()):
+            continue
+        elif not is_suspended(order_book_id):
             buy_stock(context,order_book_id)
 
     logger.info('最新持仓标的：')
@@ -92,6 +87,7 @@ def after_trading(context):
 
 #选股
 def select_stock(context):
+
     #取出当前年月日
     Year = context.now.year
     Month = context.now.month
@@ -111,21 +107,82 @@ def select_stock(context):
     elif Month > 0 and Month < 4:
         Year = Year - 1
         q = 3
-    logger.info('1.正在更新股池~~~~' + str(Year) + '-' + str(Month) + '-' + str(Day) + ':' + str(q))
+
+    logger.info('1.正在更新股池~~~~' + str(context.now.year) + '-' + str(Month) + '-' + str(Day))
+    logger.info('查询的报告年度与季度：' + str(Year) + '-' + str(q))
     #查询最新股票数据,股票列表、业绩报告（主表）、盈利能力、成长能力
     data = ts.get_report_data(Year,q)
+    logger.info('1.1 tushare get_report_data success')
     data.to_excel(context.Dir + '/data/merge.xlsx', encoding = 'utf-8')
     #调整数据，0补全空值、剔除ST、去重、取评估指标列
     data.fillna(0)
     data = data[~data.name.str.contains("S")]
     data = data.drop_duplicates('name')
-    #data = data.loc[:,['name','esp','pb','pe','esp','npr']]
-    data.to_excel(context.Dir + '/data/clean.xlsx', encoding = 'utf-8')
+    data = data.loc[(data.roe > 0)&(data.net_profits > 0)&(data.profits_yoy > 0)&(data.eps_yoy>0)]
+    #data = data.head(20)
+
+    #估值指标list
+    pe_ttms = []
+    val_pebitdaindu_ttms = []
+    val_pbindus = []
+    fa_roeexdiluteds = []
+    trade_codes = []
+
+    codes = data.code.values
+    code_num = len(codes)
+    count = 0
+
+    logger.info('1.2 从wind平台获取估值指标数据~~~')
+    w.start();
+    for code in codes:
+        count = count + 1
+        bookid = get_order_book_id(code,'wind')
+        date = context.now.strftime("%Y-%m-%d")
+        wsd_data = w.wsd(bookid, "pe_ttm,val_pebitdaindu_ttm,val_pbindu,fa_roeexdiluted,trade_code", date, date, "")
+        logger.info(str(count) + '/' + str(code_num) + '------' + str(wsd_data.ErrorCode))
+        if wsd_data.ErrorCode is 0:
+            pe_ttms.append(wsd_data.Data[0][0])
+            val_pebitdaindu_ttms.append(wsd_data.Data[1][0])
+            val_pbindus.append(wsd_data.Data[2][0])
+            fa_roeexdiluteds.append(wsd_data.Data[3][0])
+            trade_codes.append(wsd_data.Data[4][0])
+        else:
+            pe_ttms.append(0)
+            val_pebitdaindu_ttms.append(0)
+            val_pbindus.append(0)
+            fa_roeexdiluteds.append(0)
+            trade_codes.append(0)
+
+    #整理估值指标数据，0填充None
+    pe_ttms = map(NoneTo0, pe_ttms)
+    val_pebitdaindu_ttms = map(NoneTo0, val_pebitdaindu_ttms)
+    val_pbindus = map(NoneTo0, val_pbindus)
+    fa_roeexdiluteds = map(NoneTo0, fa_roeexdiluteds)
+    trade_codes = map(NoneTo0, trade_codes)
+    #将估值指标相关数据构建一个dataframe
+    wsd_df = pd.DataFrame(
+        {
+        'pe_ttm':pe_ttms,
+        "val_pebitdaindu_ttm":val_pebitdaindu_ttms,
+        "val_pbindu":val_pbindus,
+        "fa_roeexdiluted":fa_roeexdiluteds,
+        "code":trade_codes
+        },
+        columns =['pe_ttm','val_pebitdaindu_ttm','val_pbindu','fa_roeexdiluted','code'])
+
+    #将估值指标数据合并到主表
+    data = pd.merge(data, wsd_df, on = ['code'])
+
+    #data.fillna(0)
+    data.to_excel(context.Dir + '/data/with_wsd.xlsx', encoding = 'utf-8')
+    #先删除估值指标为0的标的，不参与计算平均值
+    data = data.loc[(data.pe_ttm>0)&(data.val_pbindu<0)&(data.fa_roeexdiluted>0)]
     #求均值
     mean = data.mean()
     #按指标筛选股票
-    data = data.loc[(data.eps_yoy < mean['eps_yoy'])&(data.bvps > mean['bvps'])&(data.roe>mean['roe'])]
-    data.sort_values(by=['roe','eps_yoy'])
+    _val_pbindu = mean['val_pbindu'] * 0.5
+    data = data.loc[(data.pe_ttm>mean['pe_ttm'])&(data.val_pbindu<_val_pbindu)]
+    data.sort_values(by=['val_pebitdaindu_ttm','fa_roeexdiluted'])
 
     #更新候选股票数据
     context.stocks = data
@@ -137,16 +194,28 @@ def select_stock(context):
     logger.info('股池已完成更新:' + backup)
 
 #根据code返回市场标签
-def getMarket(self,x):
+def get_order_book_id(x, ctype='rqalpha'):
+    SZ_SUFFIX = 'XSHE'  #00或者30开头的深市股票
+    SH_SUFFIX = 'XSHG'  #600开头的沪市股票
+    if ctype is 'wind':
+        SZ_SUFFIX = 'SZ'
+        SH_SUFFIX = 'SH'
     if x.startswith('00') or x.startswith('30'):
-        return SZ_SUFFIX
+        return x + '.' + SZ_SUFFIX
     elif x.startswith('60'):
-        return SH_SUFFIX
+        return x + '.' + SH_SUFFIX
+
+#0替换None
+def NoneTo0(s):
+    if s is None:
+        return 0
+    else:
+        return s
 
 #策略配置
 config = {
   "base": {
-    "start_date": "2015-01-01",
+    "start_date": "2016-01-01",
     "end_date": "2017-12-30",
     "benchmark": "000300.XSHG",
     "accounts": {
@@ -166,90 +235,3 @@ config = {
 
 if __name__ == '__main__':
     run_func(init=init, before_trading=before_trading, handle_bar=handle_bar, config=config)
-=======
-# -*- coding: UTF-8 -*-
-import datetime
-from rqalpha.api import *
-from rqalpha import run_func
-import tushare as ts
-import pandas as pd
-import numpy as np
-
-#在这个方法中编写任何的初始化逻辑。context对象将会在你的算法策略的任何方法之间做传递。
-def init(context):
-    select_stocks()
-    # 在context中保存全局变量
-    context.s1 = "000001.XSHE"
-    # 实时打印日志
-    logger.info("RunInfo: {}".format(context.run_info))
-
-# before_trading此函数会在每天策略交易开始前被调用，当天只会被调用一次
-def before_trading(context):
-    logger.info("开盘前执行before_trading函数")
-
-# 你选择的证券的数据更新将会触发此段逻辑，例如日或分钟历史数据切片或者是实时数据切片更新
-def handle_bar(context, bar_dict):
-    logger.info("每一个Bar执行")
-    logger.info("打印Bar数据：")
-    #logger.info(bar_dict[context.s1])
-
-# after_trading函数会在每天交易结束后被调用，当天只会被调用一次
-def after_trading(context):
-    logger.info("收盘后执行after_trading函数")
-
-#
-def select_stocks():
-    #估值指标：
-    # pe_ratio  市盈率
-    # pcf_ratio 市现率
-    # pb_ratio 市净率
-    # ps_ratio 市销率
-    #财务指标
-    # adjusted_diluted_earnings_per_share 每股收益EPS - 扣除/期末股本摊薄
-    # book_value_per_share 每股净资产BPS
-    # return_on_equity 净资产收益率
-    # adjusted_return_on_equity_diluted 净资产收益率ROE(扣除/摊薄)
-    # return_on_asset_net_profit 总资产净利率ROA
-    #利润指标
-    # net_profit 净利润
-    # gross_profit主营业务利润
-    data = get_fundamentals(query(
-                fundamentals.eod_derivative_indicator.pe_ratio,
-                fundamentals.eod_derivative_indicator.pcf_ratio,
-                fundamentals.eod_derivative_indicator.pb_ratio,
-                fundamentals.eod_derivative_indicator.ps_ratio,
-                fundamentals.financial_indicator.adjusted_diluted_earnings_per_share,
-                fundamentals.financial_indicator.book_value_per_share,
-                fundamentals.financial_indicator.return_on_equity,
-                fundamentals.financial_indicator.adjusted_return_on_equity_diluted,
-                fundamentals.financial_indicator.return_on_asset_net_profit,
-                fundamentals.income_statement.net_profit,
-                fundamentals.income_statement.gross_profit
-            )
-        )
-
-    return data
-
-#策略配置
-config = {
-  "base": {
-    "start_date": "2016-06-01",
-    "end_date": "2016-12-01",
-    "benchmark": "000300.XSHG",
-    "accounts": {
-        "stock": 100000
-    }
-  },
-  "extra": {
-    "log_level": "verbose",
-  },
-  "mod": {
-    "sys_analyser": {
-      "enabled": True,
-      "plot": True
-    }
-  }
-}
-
-run_func(init=init, before_trading=before_trading, handle_bar=handle_bar, config=config)
->>>>>>> before discard

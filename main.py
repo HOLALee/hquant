@@ -72,12 +72,13 @@ class Main:
         print "get_concept_classified success..."
 
 if __name__ == '__main__':
-    m = Main()
-    #print sys.getdefaultencoding()
-    #m.getStockBase()
-    # df = ts.inst_tops(60)
-    # df = df.loc[df.samount==0]
-    # df.sort_values(by=['bcount'])
-    # df.to_excel(root + "\data\inst_tops.xlsx",encoding="utf-8")
-    data = ts.get_h_data(['002337','600848'])
-    print data
+    data = ts.get_report_data(2016,1)
+    #调整数据，0补全空值、剔除ST、去重、取评估指标列
+    data.fillna(0)
+    data = data[~data.name.str.contains("S")]
+    data = data.drop_duplicates('name')
+    #data = data.loc[:,['name','esp','pb','pe','esp','npr']]
+    print len(data.roe.values)
+    data = data.loc[(data.roe > 0)&(data.net_profits > 0)&(data.eps_yoy>0)]
+    print len(data.roe.values)
+    #data.to_excel(context.Dir + '/data/clean1.xlsx', encoding = 'utf-8')
