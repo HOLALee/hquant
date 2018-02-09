@@ -1,5 +1,9 @@
 # -*- coding: UTF-8 -*-
+"""
+行业价值挖掘
+"""
 import datetime
+#wind量化python接口
 from WindPy import w
 from rqalpha.api import *
 from rqalpha import run_func
@@ -120,13 +124,9 @@ def select_stock(context):
     #data = data.head(20)
 
     #估值指标list
-    #pe
     pe_ttms = []
-    #总市值/息税折旧及摊销前利润ttm行业相对值
     val_pebitdaindu_ttms = []
-    #pb市净率行业相对值
     val_pbindus = []
-    #净资产收益率
     fa_roeexdiluteds = []
     trade_codes = []
 
@@ -184,11 +184,7 @@ def select_stock(context):
     #按指标筛选股票
     _val_pbindu = mean['val_pbindu'] * 0.5
     data = data.loc[(data.pe_ttm>mean['pe_ttm'])&(data.val_pbindu<_val_pbindu)]
-    #如果标的数量大于20再根据净资产收益率进行筛选
-    if(len(data.pe_ttm.values)>30):
-        mean = data.mean()
-        data = data.loc[(data.fa_roeexdiluted>mean['fa_roeexdiluted'])]
-    data.sort_values(by=['val_pbindu','fa_roeexdiluted'])
+    data.sort_values(by=['val_pebitdaindu_ttm','fa_roeexdiluted'])
 
     #更新候选股票数据
     context.stocks = data
