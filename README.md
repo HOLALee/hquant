@@ -1,17 +1,22 @@
 ﻿量化分析项目
-平台：python
-基础框架：tushare
-开发人：小李 hola
+==
+----
+1.基本信息
+---
+* 平台：python
+* 基础框架：tushare
+* 开发人：小李 hola
 
-策略说明
-采用多个质量因子与估值指标进行选股
-对筛选出来的标的进行买卖
+2.策略说明
+---
+* 采用多个质量因子与估值指标进行选股
+* 对筛选出来的标的进行买卖
 
+3.数据来源
+--
+* [tushare](http://tushare.org/fundamental.html)
+* [wind-大奖章](http://www.dajiangzhang.com/document)
 
-待完善事项
-1.根据行业调整质量因子组合和筛选策略
-2.添加估值指标
-3.添加行情分析，评估交易可行性
-4.优化标的范围确定策略
-
-新开dev分支
+4.回测框架
+--
+* [rqalpha](http://rqalpha.io/zh_CN/latest/index.html)
