@@ -178,7 +178,7 @@ def select_stock(context):
     #data.fillna(0)
     data.to_excel(context.Dir + '/data/with_wsd.xlsx', encoding = 'utf-8')
     #先删除估值指标为0的标的，不参与计算平均值
-    data = data.loc[(data.pe_ttm>0)&(data.val_pbindu<0)&(data.fa_roeexdiluted>0)]
+    data = data.loc[(data.pe_ttm>0)&(data.fa_roeexdiluted>0)]
     #求均值
     mean = data.mean()
     #按指标筛选股票
